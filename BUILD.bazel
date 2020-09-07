@@ -1,0 +1,33 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+_public_hdrs = [
+    "include/boost/*.hpp",
+]
+
+cc_library(
+    name = "asio_internal",
+    includes = ["include"],
+    hdrs = glob(["include/boost/**/*.hpp"], exclude = _public_hdrs),
+    defines = ["BOOST_ASIO_SEPARATE_COMPILATION=1"],
+    srcs = glob([
+        "include/boost/**/*.hpp",
+        "include/boost/**/*.ipp",
+        "include/boost/**/*.cpp",
+    ]),
+    deps = [
+        "@boost//config",
+        "@boost//system",
+        "@boost//throw_exception",
+        "@boost//assert",
+        "@boost//date_time",
+        "@boost//smart_ptr",
+    ],
+)
+
+cc_library(
+    name = "asio",
+    visibility = ["//visibility:public"],
+    includes = ["include"],
+    hdrs = glob(_public_hdrs),
+    deps = [":asio_internal"],
+)
