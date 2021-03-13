@@ -1,13 +1,13 @@
 load("@rules_cc//cc:defs.bzl", "cc_library")
 
-_public_hdrs = [
-    "include/boost/*.hpp",
+_internal_hdrs = [
+    "include/boost/detail/**/*.hpp",
 ]
 
 cc_library(
     name = "asio_internal",
     includes = ["include"],
-    hdrs = glob(["include/boost/**/*.hpp"], exclude = _public_hdrs),
+    hdrs = glob(_internal_hdrs),
     defines = ["BOOST_ASIO_SEPARATE_COMPILATION=1"],
     srcs = glob([
         "include/boost/**/*.hpp",
@@ -29,7 +29,9 @@ cc_library(
     name = "asio",
     visibility = ["//visibility:public"],
     includes = ["include"],
-    hdrs = glob(_public_hdrs),
+    hdrs = glob(["include/**/*.hpp"], exclude = _internal_hdrs),
+    strip_include_prefix = "include",
+    linkopts = ["-lpthread"],
     deps = [
         ":asio_internal",
         "@boost//bind",
