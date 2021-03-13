@@ -1,0 +1,12 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "unit_test_lib",
+    hdrs = ["unit_test.hpp"],
+)
+
+cc_test(
+    name = "associated_allocator",
+    srcs = ["associated_allocator.cpp"],
+    deps = [":unit_test_lib", "@boost//asio"],
+)
