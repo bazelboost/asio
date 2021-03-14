@@ -1,0 +1,19 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_binary")
+
+cc_library(
+    name = "chat_message",
+    hdrs = ["chat_message.hpp"],
+    deps = ["//:asio"],
+)
+
+cc_binary(
+    name = "chat_server",
+    srcs = ["chat_server.cpp"],
+    deps = ["//:asio", ":chat_message"],
+)
+
+cc_binary(
+    name = "chat_client",
+    srcs = ["chat_client.cpp"],
+    deps = ["//:asio", ":chat_message"],
+)
