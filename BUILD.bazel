@@ -1,19 +1,55 @@
 load("@rules_cc//cc:defs.bzl", "cc_library")
 
+_ssl_srcs = [
+    "include/boost/asio/ssl/**/*.hpp",
+    "include/boost/asio/ssl/**/*.ipp",
+    "include/boost/asio/ssl/**/*.cpp",
+]
+
+_ssl_hdrs = [
+    "include/boost/asio/ssl/**/*.hpp",
+]
+
+_srcs = [
+    "include/boost/**/*.hpp",
+    "include/boost/**/*.ipp",
+    "include/boost/**/*.cpp",
+]
+
+_deprecated_srcs = [
+    "include/boost/asio/impl/src.cpp",
+]
+
 _internal_hdrs = [
     "include/boost/detail/**/*.hpp",
 ]
+
+_windows_hdrs = [
+    "include/boost/asio/windows/*.hpp",
+]
+
+_posix_hdrs = [
+    "include/boost/asio/posix/*.hpp",
+]
+
+cc_library(
+    name = "asio_windows",
+    defines = ["BOOST_ASIO_SEPARATE_COMPILATION=1"],
+    hdrs = glob(_windows_hdrs),
+)
+
+cc_library(
+    name = "asio_posix",
+    hdrs = glob(_posix_hdrs),
+    linkopts = ["-lpthread"],
+)
 
 cc_library(
     name = "asio_internal",
     includes = ["include"],
     hdrs = glob(_internal_hdrs),
     defines = ["BOOST_ASIO_SEPARATE_COMPILATION=1"],
-    srcs = glob([
-        "include/boost/**/*.hpp",
-        "include/boost/**/*.ipp",
-        "include/boost/**/*.cpp",
-    ]),
+    srcs = glob(_srcs, exclude = _deprecated_srcs + _ssl_srcs),
     deps = [
         "@boost//config",
         "@boost//system",
@@ -29,13 +65,16 @@ cc_library(
     name = "asio",
     visibility = ["//visibility:public"],
     includes = ["include"],
-    hdrs = glob(["include/**/*.hpp"], exclude = _internal_hdrs),
+    defines = ["BOOST_ASIO_SEPARATE_COMPILATION=1"],
+    hdrs = glob(["include/**/*.hpp"], exclude = _internal_hdrs + _windows_hdrs + _posix_hdrs + _ssl_hdrs),
     strip_include_prefix = "include",
-    linkopts = ["-lpthread"],
     deps = [
         ":asio_internal",
         "@boost//bind",
         "@boost//regex",
         "@boost//date_time",
-    ],
+    ] + select({
+        "@platforms//os:windows": [":asio_windows"],
+        "//conditions:default": [":asio_posix"],
+    }),
 )
