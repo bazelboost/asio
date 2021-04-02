@@ -33,11 +33,44 @@ _posix_hdrs = [
     "include/boost/asio/posix/*.hpp",
 ]
 
+constraint_setting(
+    name = "ssl",
+    visibility = ["//visibility:public"],
+    default_constraint_value = ":no_ssl",
+)
+
+constraint_value(
+    name = "no_ssl",
+    visibility = ["//visibility:public"],
+    constraint_setting = "ssl",
+)
+
+constraint_value(
+    name = "openssl",
+    visibility = ["//visibility:public"],
+    constraint_setting = "ssl",
+)
+
+constraint_value(
+    name = "boringssl",
+    visibility = ["//visibility:public"],
+    constraint_setting = "ssl",
+)
+
 write_file(
     name = "compilation_src",
     out = "bazel_asio_compilation_src.cpp",
     content = [
         "#include <boost/asio/impl/src.hpp>",
+    ],
+)
+
+write_file(
+    name = "compilation_ssl_src",
+    out = "bazel_asio_compilation_ssl_src.cpp",
+    content = [
+        "#include <boost/asio/impl/src.hpp>",
+        "#include <boost/asio/ssl/impl/src.hpp>",
     ],
 )
 
@@ -61,9 +94,11 @@ cc_library(
     includes = ["include"],
     hdrs = glob(_internal_hdrs),
     defines = ["BOOST_ASIO_SEPARATE_COMPILATION=1"],
-    srcs = glob(_srcs, exclude = _deprecated_srcs + _ssl_srcs) + [
-        ":compilation_src",
-    ],
+    srcs = glob(_srcs, exclude = _deprecated_srcs + _ssl_srcs) + select({
+        ":no_ssl": [":compilation_src"],
+        ":openssl": [":compilation_ssl_src"],
+        ":boringssl": [":compilation_ssl_src"],
+    }),
     deps = [
         "@boost//config",
         "@boost//system",
@@ -72,7 +107,11 @@ cc_library(
         "@boost//date_time",
         "@boost//smart_ptr",
         "@boost//regex",
-    ],
+    ] + select({
+        ":no_ssl": [],
+        ":openssl": ["@openssl//:ssl"],
+        ":boringssl": ["@boringssl//:ssl"],
+    }),
 )
 
 cc_library(
