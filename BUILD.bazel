@@ -9,7 +9,11 @@ _ssl_srcs = [
 
 _ssl_hdrs = [
     "include/boost/asio/ssl/**/*.hpp",
+    "include/boost/asio/ssl/**/*.ipp",
 ]
+
+_impl_hdr = "include/boost/asio/impl/src.hpp"
+_ssl_impl_hdr = "include/boost/asio/ssl/impl/src.hpp"
 
 _srcs = [
     "include/boost/**/*.hpp",
@@ -23,6 +27,7 @@ _deprecated_srcs = [
 
 _internal_hdrs = [
     "include/boost/detail/**/*.hpp",
+    "include/boost/detail/**/*.ipp",
 ]
 
 _windows_hdrs = [
@@ -92,12 +97,16 @@ cc_library(
 cc_library(
     name = "asio_internal",
     includes = ["include"],
-    hdrs = glob(_internal_hdrs),
+    hdrs = glob(["include/**/*.hpp", "include/**/*.ipp"]),
     defines = ["BOOST_ASIO_SEPARATE_COMPILATION=1"],
     srcs = glob(_srcs, exclude = _deprecated_srcs + _ssl_srcs) + select({
         ":no_ssl": [":compilation_src"],
         ":openssl": [":compilation_ssl_src"],
         ":boringssl": [":compilation_ssl_src"],
+    }) + select({
+        ":no_ssl": [],
+        ":openssl": [_ssl_impl_hdr],
+        ":boringssl": [_ssl_impl_hdr],
     }),
     deps = [
         "@boost//config",
@@ -119,7 +128,11 @@ cc_library(
     visibility = ["//visibility:public"],
     includes = ["include"],
     defines = ["BOOST_ASIO_SEPARATE_COMPILATION=1"],
-    hdrs = glob(["include/**/*.hpp"], exclude = _internal_hdrs + _windows_hdrs + _posix_hdrs + _ssl_hdrs),
+    hdrs = glob(["include/**/*.hpp"], exclude = _internal_hdrs + _windows_hdrs + _posix_hdrs + _ssl_hdrs + [_impl_hdr, _ssl_impl_hdr]) + select({
+        ":no_ssl": [],
+        ":openssl": glob(_ssl_hdrs, exclude = [_ssl_impl_hdr]),
+        ":boringssl": glob(_ssl_hdrs, exclude = [_ssl_impl_hdr]),
+    }),
     strip_include_prefix = "include",
     deps = [
         ":asio_internal",
