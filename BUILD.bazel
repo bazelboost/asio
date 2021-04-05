@@ -118,7 +118,7 @@ cc_library(
         "@boost//regex",
     ] + select({
         ":no_ssl": [],
-        ":openssl": ["@openssl//:ssl"],
+        ":openssl": ["@org_openssl//:ssl"],
         ":boringssl": ["@boringssl//:ssl"],
     }),
 )
