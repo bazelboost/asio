@@ -8,5 +8,5 @@ cc_library(
 cc_test(
     name = "associated_allocator",
     srcs = ["associated_allocator.cpp"],
-    deps = [":unit_test_lib", "@boost//asio"],
+    deps = [":unit_test_lib", "@boost//libs/asio"],
 )

@@ -109,13 +109,13 @@ cc_library(
         ":boringssl": [_ssl_impl_hdr],
     }),
     deps = [
-        "@boost//config",
-        "@boost//system",
-        "@boost//throw_exception",
-        "@boost//assert",
-        "@boost//date_time",
-        "@boost//smart_ptr",
-        "@boost//regex",
+        "@boost//libs/config",
+        "@boost//libs/system",
+        "@boost//libs/throw_exception",
+        "@boost//libs/assert",
+        "@boost//libs/date_time",
+        "@boost//libs/smart_ptr",
+        "@boost//libs/regex",
     ] + select({
         ":no_ssl": [],
         ":openssl": ["@org_openssl//:ssl"],
@@ -136,9 +136,9 @@ cc_library(
     strip_include_prefix = "include",
     deps = [
         ":asio_internal",
-        "@boost//bind",
-        "@boost//regex",
-        "@boost//date_time",
+        "@boost//libs/bind",
+        "@boost//libs/regex",
+        "@boost//libs/date_time",
     ] + select({
         "@platforms//os:windows": [":asio_windows"],
         "//conditions:default": [":asio_posix"],
