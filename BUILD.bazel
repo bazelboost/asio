@@ -1,16 +1,32 @@
-load("@rules_cc//cc:defs.bzl", "cc_library")
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@rules_cc//cc:defs.bzl", "cc_library")
 
 string_flag(
     name = "ssl",
-    visibility = ["//visibility:public"],
-    values = ["no_ssl", "boringssl"], # OpenSSL not in BCR yet.
     build_setting_default = "no_ssl",
+    values = [
+        "no_ssl",
+        "boringssl",
+        "openssl",
+    ],
+    visibility = ["//visibility:public"],
 )
 
-config_setting(name = "no_ssl", flag_values = {":ssl": "no_ssl"})
-config_setting(name = "boringssl", flag_values = {":ssl": "boringssl"})
+config_setting(
+    name = "no_ssl",
+    flag_values = {":ssl": "no_ssl"},
+)
+
+config_setting(
+    name = "boringssl",
+    flag_values = {":ssl": "boringssl"},
+)
+
+config_setting(
+    name = "openssl",
+    flag_values = {":ssl": "openssl"},
+)
 
 write_file(
     name = "src",
@@ -28,25 +44,6 @@ write_file(
 
 cc_library(
     name = "boost.asio",
-    visibility = ["//visibility:public"],
-    defines = ["BOOST_ASIO_SEPARATE_COMPILATION"],
-    linkopts = select({
-        "@platforms//os:windows": [
-            "-DEFAULTLIB:ws2_32",
-            "-DEFAULTLIB:mswsock",
-        ],
-        "//conditions:default": [
-            "-lpthread",
-        ],
-    }),
-    hdrs = glob([
-        "include/**/*.hpp",
-        "include/**/*.h",
-        "include/**/*.ipp",
-    ], exclude = [
-        "include/boost/asio/impl/src.hpp",
-        "include/boost/asio/ssl/impl/src.hpp",
-    ]),
     srcs = [":src"] + select({
         ":no_ssl": [
             "include/boost/asio/impl/src.hpp",
@@ -56,7 +53,29 @@ cc_library(
             "include/boost/asio/ssl/impl/src.hpp",
         ],
     }),
+    hdrs = glob(
+        [
+            "include/**/*.hpp",
+            "include/**/*.h",
+            "include/**/*.ipp",
+        ],
+        exclude = [
+            "include/boost/asio/impl/src.hpp",
+            "include/boost/asio/ssl/impl/src.hpp",
+        ],
+    ),
+    defines = ["BOOST_ASIO_SEPARATE_COMPILATION"],
     includes = ["include"],
+    linkopts = select({
+        "@platforms//os:windows": [
+            "-DEFAULTLIB:ws2_32",
+            "-DEFAULTLIB:mswsock",
+        ],
+        "//conditions:default": [
+            "-lpthread",
+        ],
+    }),
+    visibility = ["//visibility:public"],
     deps = [
         "@boost.align",
         "@boost.array",
@@ -78,6 +97,7 @@ cc_library(
         "@boost.utility",
     ] + select({
         ":boringssl": ["@boringssl//:ssl"],
+        ":openssl": ["@openssl//:ssl"],
         ":no_ssl": [],
     }),
 )
