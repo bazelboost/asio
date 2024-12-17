@@ -5,6 +5,7 @@ on: [pull_request]
 jobs:
   test:
     strategy:
+      fail-fast: false
       matrix:
         os:
           - ubuntu-latest
@@ -16,4 +17,6 @@ jobs:
     - run: bazelisk test ...
       working-directory: test
     - run: bazelisk test ... --@boost.asio//:ssl=boringssl
+      working-directory: test
+    - run: bazelisk test ... --@boost.asio//:ssl=openssl
       working-directory: test
